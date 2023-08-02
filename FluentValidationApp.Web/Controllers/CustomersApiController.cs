@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using FluentValidationApp.Web.Models;
 using FluentValidation;
+using AutoMapper;
+using FluentValidationApp.Web.DTOs;
 
 namespace FluentValidationApp.Web.Controllers
 {
@@ -11,22 +13,29 @@ namespace FluentValidationApp.Web.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IValidator<Customer> _customerValidator;
+        private readonly IMapper _mapper;
 
-        public CustomersApiController(AppDbContext context, IValidator<Customer> customerValidator)
+        public CustomersApiController(AppDbContext context, IValidator<Customer> customerValidator, IMapper mapper)
         {
             _context = context;
             _customerValidator = customerValidator;
+            _mapper = mapper;
+        }
+        [Route("MappingOrnek")]
+        [HttpGet]
+        public IActionResult MappingOrnek()
+        {
+            Customer customer = new Customer { Id = 1, Name= "Burcu", Email= "burcustael@hotmail.com" , Age=28 , CreditCard=new CreditCard {Number="1234", ValidDate=DateTime.Now} };
+            return Ok(_mapper.Map<CustomerDto>(customer));
         }
 
         // GET: api/CustomersApi
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+        public async Task<ActionResult<List<CustomerDto>>> GetCustomers()
         {
-          if (_context.Customers == null)
-          {
-              return NotFound();
-          }
-            return await _context.Customers.ToListAsync();
+          List<Customer> customers = await _context.Customers.ToListAsync();
+
+            return _mapper.Map<List<CustomerDto>>(customers); 
         }
 
         // GET: api/CustomersApi/5
