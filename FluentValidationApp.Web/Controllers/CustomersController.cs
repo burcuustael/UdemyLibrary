@@ -1,24 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FluentValidationApp.Web.Models;
+using FluentValidation;
 
 namespace FluentValidationApp.Web.Controllers
 {
     public class CustomersController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IValidator<Customer> _customerValidator;
 
-        public CustomersController(AppDbContext context)
+        public CustomersController(AppDbContext context, IValidator<Customer> customerValidator)
         {
             _context = context;
+            _customerValidator = customerValidator;
         }
 
         // GET: Customers
         public async Task<IActionResult> Index()
         {
-              return _context.Customers != null ? 
-                          View(await _context.Customers.ToListAsync()) :
-                          Problem("Entity set 'AppDbContext.Customers'  is null.");
+            return _context.Customers != null ?
+                        View(await _context.Customers.ToListAsync()) :
+                        Problem("Entity set 'AppDbContext.Customers'  is null.");
         }
 
         // GET: Customers/Details/5
@@ -52,7 +55,8 @@ namespace FluentValidationApp.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Email,Age,BirthDay")] Customer customer)
         {
-            if (ModelState.IsValid)
+            var result = _customerValidator.Validate(customer);
+            if (result.IsValid)
             {
                 _context.Add(customer);
                 await _context.SaveChangesAsync();
@@ -144,14 +148,14 @@ namespace FluentValidationApp.Web.Controllers
             {
                 _context.Customers.Remove(customer);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CustomerExists(int id)
         {
-          return (_context.Customers?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Customers?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
