@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Smidge;
+using Smidge.Options;
+using Smidge.Cache;
 
 namespace SmidgeApp.Web
 {
@@ -51,7 +53,9 @@ namespace SmidgeApp.Web
 
             app.UseSmidge(bundle =>
             {
-                bundle.CreateJs("my-js-bundle", "~js/site.js", "~js/site2.js");
+                bundle.CreateJs("my-js-bundle", "~/js/").WithEnvironmentOptions(BundleEnvironmentOptions.Create().ForDebug(builder =>
+                builder.EnableCompositeProcessing().EnableFileWatcher().SetCacheBusterType<AppDomainLifetimeCacheBuster>().CacheControlOptions(enableEtag: false , cacheControlMaxAge: 0)).Build());
+                                
             });
             app.UseEndpoints(endpoints =>
             {
